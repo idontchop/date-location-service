@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: location-service
+server:
+  port: ${PORT:8900}
+eureka:
+  instance:
+    hostname: localhost
+    metadataMap:
+      zone: zone1
