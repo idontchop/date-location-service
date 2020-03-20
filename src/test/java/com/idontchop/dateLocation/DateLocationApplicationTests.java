@@ -19,7 +19,9 @@ class DateLocationApplicationTests {
 	@Test
 	void testMakeDefault () {
 		
-		locationService.newLocation("1");
+		for ( int c = 2; c < 20; c = c + 2 ) {
+			locationService.newLocation(Integer.toString(c), 36.1699, 115.1398);
+		}
 	}
 
 }

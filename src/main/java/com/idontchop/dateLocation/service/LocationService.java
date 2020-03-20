@@ -46,7 +46,7 @@ public class LocationService {
 	 * @param lng
 	 * @return
 	 */
-	public Location newLocation ( String username, float lat, float lng ) {
+	public Location newLocation ( String username, double lat, double lng ) {
 		
 		Point loc = new Point ( new Position(lat,lng));
 		
