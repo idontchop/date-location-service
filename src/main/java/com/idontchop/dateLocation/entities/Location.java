@@ -30,14 +30,50 @@ public class Location {
 	 * LOC - the user was pinged in this location
 	 * HOME - where the user considers home (and wants to be found)
 	 * 
+	 * int values are supplied for comparison
+	 * 
 	 * @author nathan
 	 *
 	 */
 	public enum PingType {
-		SEARCH,
-		LOC,
-		HOME
+		SEARCH(0),
+		LOC(1),
+		HOME(2);
+		
+		private final int intValue;
+		private PingType (int intValue) {
+			this.intValue = intValue;
+		}
+		
+		public int getIntValue() {
+			return intValue;
+		}
 	};
+	
+	/**
+	 * Sets this location's type to Search:
+	 * The user searched in this location.
+	 */
+	public void setSearch () {
+		pingType = PingType.SEARCH;
+	}
+	
+	/**
+	 * Sets this location's type to LOC:
+	 * The user was pinged in this location.
+	 * 
+	 */
+	public void setLoc () {
+		pingType = PingType.LOC;
+	}
+	
+	/**
+	 * Sets this location's type to Home:
+	 * The user set this location has his/her home.
+	 */
+	public void setHome () {
+		pingType = PingType.HOME;
+	}
 	
 	@Indexed
 	private PingType pingType = PingType.LOC;
@@ -86,5 +122,26 @@ public class Location {
 		this.created = created;
 	}
 
-	
+	/**
+	 * Compare to will check for nulls in the passed in loc. If a null
+	 * is set, that field will not be used for hte compareto.
+	 * 
+	 * username must always be set.
+	 * 
+	 * For example, if usernames are equal but lat/lng in loc argument
+	 * is set to null, all fields with username will match.
+	 * 
+	 * @param loc
+	 * @return
+	 */
+	@Override
+	public int compareTo ( Location loc ) {
+		
+		int retVal = this.username.compareTo(loc.getUsername()) * 1000;
+		
+		if ( loc.getPingType() != null) {
+			retVal +=
+		}
+		
+	}
 }

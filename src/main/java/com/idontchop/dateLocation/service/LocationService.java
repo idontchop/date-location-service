@@ -57,5 +57,32 @@ public class LocationService {
 		return location;
 		
 	}
+	
+	/**
+	 * Deletes a location from the database. Only the username is required and will delete
+	 * all records with that username. Each additional parameter supplied will do a more
+	 * specific delete.
+	 * 
+	 * @param username
+	 * @param type
+	 * @param lat
+	 * @param lng
+	 * @return
+	 */
+	public Location deleteLocation ( String username, String type, String latArg, String lngArg ) {
+		
+		// Check for lat/lng
+		double lat,lng;
+		try {
+			lat = Double.parseDouble(latArg);
+			lng = Double.parseDouble(lngArg);
+		} catch ( NumberFormatException e ) {
+			lat = null;
+			lng = null;
+		}
+		
+		// Check for type
+		
+	}
 
 }
