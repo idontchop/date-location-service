@@ -3,10 +3,12 @@ package com.idontchop.dateLocation.entities;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.mongodb.client.model.geojson.Point;
 
+@Document
 public class Location {
 	
 	public Location () {}
@@ -36,9 +38,10 @@ public class Location {
 	 *
 	 */
 	public enum PingType {
-		SEARCH(0),
-		LOC(1),
-		HOME(2);
+		NULL(0),
+		SEARCH(1),
+		LOC(2),
+		HOME(3);
 		
 		private final int intValue;
 		private PingType (int intValue) {
@@ -51,10 +54,17 @@ public class Location {
 	};
 	
 	/**
+	 * Sets this locations type to Null:
+	 * This would be used to ignore this in comparisons.
+	 */
+	public void setAsNull () {
+		pingType = PingType.NULL;
+	}
+	/**
 	 * Sets this location's type to Search:
 	 * The user searched in this location.
 	 */
-	public void setSearch () {
+	public void setAsSearch () {
 		pingType = PingType.SEARCH;
 	}
 	
@@ -63,7 +73,7 @@ public class Location {
 	 * The user was pinged in this location.
 	 * 
 	 */
-	public void setLoc () {
+	public void setAsLoc () {
 		pingType = PingType.LOC;
 	}
 	
@@ -71,7 +81,7 @@ public class Location {
 	 * Sets this location's type to Home:
 	 * The user set this location has his/her home.
 	 */
-	public void setHome () {
+	public void setAsHome () {
 		pingType = PingType.HOME;
 	}
 	
@@ -134,14 +144,30 @@ public class Location {
 	 * @param loc
 	 * @return
 	 */
-	@Override
 	public int compareTo ( Location loc ) {
+		
+		if ( this.username == null || loc.getUsername() == null ) return -1;
 		
 		int retVal = this.username.compareTo(loc.getUsername()) * 1000;
 		
-		if ( loc.getPingType() != null) {
-			retVal +=
+		if ( loc.getPingType() != PingType.NULL) {
+			retVal += ((this.pingType.getIntValue() - loc.getPingType().getIntValue()) * 100);
 		}
 		
+		if ( loc.getLoc() != null ) {
+			retVal += this.loc.equals(loc.getLoc()) ? 0 : 10;
+		}
+		
+		return retVal;
+		
 	}
+
+	@Override
+	public String toString() {
+		return "Location [id=" + id + ", username=" + username + ", pingType=" + pingType + ", loc=" + loc
+				+ ", created=" + created + "]";
+	}
+	
+	
+	
 }
