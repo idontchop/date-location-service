@@ -9,6 +9,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
@@ -68,14 +69,67 @@ public class LocationService {
 	}
 	
 	/**
+	 * Builds a NearQuery with the supplied point and distance parameters.
+	 * 
+	 * This is where the nearQuery is instantiated. Adding a Query and page
+	 * will be done after the return from this method.
+	 * 
+	 * @param latArg
+	 * @param lngArg
+	 * @param km
+	 * @return
+	 */
+	private NearQuery buildNearQuery ( String latArg, String lngArg, int km ) {
+		
+		NearQuery nearQuery = null;
+		
+		// Check for lat/lng
+
+		
+		Distance distance = new Distance(km, Metrics.KILOMETERS);
+		
+		nearQuery = NearQuery.near(pointFromCoords(latArg, lngArg));
+		nearQuery.maxDistance(distance);
+			
+
+		
+		return nearQuery;
+		
+	}
+	
+	private NearQuery buildNearQuery ( Point point, int km ) {
+		return null;
+	}
+	
+	/**
+	 * Returns null if strings not parsed.
+	 * 
+	 * @param latArg
+	 * @param lngArg
+	 * @return
+	 */
+	private Point pointFromCoords ( String latArg, String lngArg ) {
+		
+		double lat,lng;
+		try {
+			lat = Double.parseDouble(latArg);
+			lng = Double.parseDouble(lngArg);
+			
+			Point point = new Point ( lng, lat );
+			
+			return point;
+			
+		} catch ( NumberFormatException e ) {
+			return null;
+		} catch (NullPointerException e ) {
+			return null;
+		}
+	}
+	
+	/**
 	 * returns a mongo Query which can then be used with mongoTemplate for a find
 	 * or delete.
 	 * 
-	 * Ok, here is hte plan: 
-	 * 
-	 * Pretty much start over. Have this buildQuery accept non-distance stuff
-	 * Have a buildNearQuery which accepts a query and distance.
-	 * Perhaps setup a builder pattern... (nah, just need the two, queries already builder)
 	 * 
 	 * @param username
 	 * @param type
@@ -83,33 +137,16 @@ public class LocationService {
 	 * @param lngArg
 	 * @return
 	 */
-	private Query buildQuery ( String username, String type, String latArg, String lngArg, int km ) {
+	private Query buildQuery ( String username, String type ) {
 		
 		Query query = new Query();
-		
+
 		// username
 		if ( username != null ) {
 			query.addCriteria(Criteria.where("username").is(username));
 		}
 		
-		// Check for lat/lng
-		double lat,lng;
-		try {
-			lat = Double.parseDouble(latArg);
-			lng = Double.parseDouble(lngArg);
-			
-			Point point = new Point ( lng, lat );
-			if ( km > 0 ) {
-				Distance distance = new Distance(km, Metrics.KILOMETERS);
 				
-			}
-			else query.addCriteria(Criteria.where("loc").is(point));
-		} catch ( NumberFormatException e ) {
-			// expected if not passed
-		} catch (NullPointerException e ) {
-			// expected if not passed
-		}
-		
 		// Check for type		
 		try {
 			Location.PingType pingType = Location.PingType.valueOf(type);
@@ -134,22 +171,13 @@ public class LocationService {
 	 * @param lng
 	 * @return #number of deleted records
 	 */
-	public long deleteLocation ( String username, String type, String latArg, String lngArg ) {
-						
-		DeleteResult count = mongoTemplate.remove(buildQuery(username, type, latArg, lngArg, 0));
+	public long deleteLocation ( String username, String type ) {
+								
+		DeleteResult count = mongoTemplate.remove(buildQuery(username, type ));
 		
 		return count.getDeletedCount();
 		
 	}
-	
-	/**
-	 * Overloaded delete Locations
-	 */
-	public long deleteLocation ( String username ) { return deleteLocation ( username, null, null, null);}
-	public long deleteLocation (String username, String type) { return deleteLocation ( username, type, null, null);}
-	public long deleteLocationWithCoords (String username, String latArg, String lngArg) {
-		return deleteLocation (username, null, latArg, lngArg);	}
-	
 	
 	
 	/**
@@ -162,7 +190,7 @@ public class LocationService {
 	 * @return
 	 */
 	public long countLocation ( String username, String type, String latArg, String lngArg ) {
-		return mongoTemplate.count(buildQuery(username, type, latArg, lngArg, 0), Location.class);
+		return 1;
 	}
 	
 	public Page<Location> getLocationWithUsername ( String username, String type, String latArg, String lngArg, int page) 
