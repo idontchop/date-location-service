@@ -75,7 +75,7 @@ public class LocationService {
 	 * 
 	 * Pretty much start over. Have this buildQuery accept non-distance stuff
 	 * Have a buildNearQuery which accepts a query and distance.
-	 * Perhaps setup a builder pattern...
+	 * Perhaps setup a builder pattern... (nah, just need the two, queries already builder)
 	 * 
 	 * @param username
 	 * @param type
