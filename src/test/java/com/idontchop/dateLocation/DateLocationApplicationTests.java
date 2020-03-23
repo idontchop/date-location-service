@@ -34,14 +34,21 @@ class DateLocationApplicationTests {
 	void contextLoads() {
 	}
 	
+	@Test
 	void testMakeDefault () {
 		
-		for ( int c = 1; c < 4; c = c + 2 ) {
-			locationService.newLocation(Integer.toString(c), 115.1398, 36.1688);
+		for ( int c = 22; c < 40; c = c + 2 ) {
+			locationService.newLocation(Integer.toString(c), 36.1288, 115.1318);
 		}
 	}
 	
-	@Test
+	
+	void testDeleteAllPoints () {
+		
+		long c = locationService.deleteLocation(null, null, "36", "115", 100);
+		assertTrue(c > 1);
+	}
+	
 	void testCompareLocation () {
 		
 		Location testLocation = new Location();
@@ -113,7 +120,7 @@ class DateLocationApplicationTests {
 		list.forEach(e -> System.out.println(e.toString()));
 	}
 	
-	@Test
+	
 	void testGeo () {
 		
 		Point point = new Point ( 115.0, 36.0 );
@@ -121,6 +128,15 @@ class DateLocationApplicationTests {
 		
 		Page<Location> p = locationRepository.findByLocNear(point, distance,PageRequest.of(0, 100));
 		assertTrue (p.getTotalElements() > 0);
+	}
+	
+	@Test
+	void countGeo () {
+		
+		List<String> type = new ArrayList<>();
+		type.add("LOC");
+		long c = locationService.countLocation("36.158", "115.131", 1, type);
+		assertTrue ( c == 0 );
 	}
 
 }

@@ -1,5 +1,8 @@
 package com.idontchop.dateLocation.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,17 +38,17 @@ public class LocationService {
 	 * @return
 	 */
 	public Location newLocation ( String username ) {
-		Point point = new Point(-1.0, 1.0);
-		
-		Location location = new Location();
-		
-		location.setLoc(point);
-		location.setUsername(username);
-		
-		locationRepository.save(location);
-		
-		return location;
-		
+		return newLocation (username, 1.0, 1.0, "LOC");		
+	}
+	
+	public Location newLocation ( String username, double lat, double lng ) {
+		return newLocation (username, lat, lng, "LOC");
+	}
+	
+	public Location newLocation ( String username, String latArg, String lngArg, String type ) {
+		double lat = Double.parseDouble(latArg);
+		double lng = Double.parseDouble(lngArg);
+		return newLocation ( username, lat, lng, type);
 	}
 	
 	/**
@@ -56,15 +59,59 @@ public class LocationService {
 	 * @param lng
 	 * @return
 	 */
-	public Location newLocation ( String username, double lat, double lng ) {
+	public Location newLocation ( String username, double lat, double lng, String type ) {
 		
-		Point loc = new Point ( lat,lng );
+		Point loc = new Point ( lng, lat );
 		
 		Location location = new Location(username, loc);
+		
+		location.setPingType(Location.PingType.valueOf(type));
 		
 		locationRepository.save(location);
 		
 		return location;
+		
+	}
+	
+	/**
+	 * Deletes a location from the database. Only the username is required and will delete
+	 * all records with that username. Each additional parameter supplied will do a more
+	 * specific delete.
+	 * 
+	 * @param username
+	 * @param type
+	 * @param lat
+	 * @param lng
+	 * @return #number of deleted records
+	 */
+	public long deleteLocation ( String username, String type, String lat, String lng, int km ) {
+		
+		Query query = null;
+		try {
+			query = buildQuery ( username, type );
+		} catch (IllegalArgumentException e ) {
+			// if two nulls are passed:
+			query = new Query();
+		}
+		
+		try {			
+			
+			query.addCriteria(Criteria.where("loc").near(pointFromCoords(lat,lng))
+					.maxDistance(distanceFromKm(km)));
+			
+		} catch (IllegalArgumentException e) {
+			// this will fail if lat/lng are null
+		}
+				
+		// If all arguments are wrong, the query could still be null
+		if (query == null) throw new IllegalArgumentException (
+				"service deleteLocation received: " + username + "-" + type + "-" +
+				"-" + lat + "-" + lng + "-" + km);
+		
+		// delete
+		DeleteResult count = mongoTemplate.remove(query, Location.class);
+		
+		return count.getDeletedCount();
 		
 	}
 	
@@ -79,26 +126,16 @@ public class LocationService {
 	 * @param km
 	 * @return
 	 */
-	private NearQuery buildNearQuery ( String latArg, String lngArg, int km ) {
+	private NearQuery buildNearQuery ( String latArg, String lngArg, int km ) throws IllegalArgumentException {
 		
-		NearQuery nearQuery = null;
-		
-		// Check for lat/lng
-
-		
-		Distance distance = new Distance(km, Metrics.KILOMETERS);
-		
-		nearQuery = NearQuery.near(pointFromCoords(latArg, lngArg));
-		nearQuery.maxDistance(distance);
-			
-
-		
-		return nearQuery;
-		
+		return buildNearQuery ( pointFromCoords( latArg, lngArg), km);	
 	}
 	
 	private NearQuery buildNearQuery ( Point point, int km ) {
-		return null;
+		
+		Distance distance = new Distance(km, Metrics.KILOMETERS);
+		NearQuery nearQuery = NearQuery.near(point).maxDistance(distance);		
+		return nearQuery;
 	}
 	
 	/**
@@ -108,7 +145,7 @@ public class LocationService {
 	 * @param lngArg
 	 * @return
 	 */
-	private Point pointFromCoords ( String latArg, String lngArg ) {
+	private Point pointFromCoords ( String latArg, String lngArg ) throws IllegalArgumentException {
 		
 		double lat,lng;
 		try {
@@ -120,10 +157,15 @@ public class LocationService {
 			return point;
 			
 		} catch ( NumberFormatException e ) {
-			return null;
+			throw new IllegalArgumentException ("pointFromCoords received: " + latArg + "-" + "lngArg");
 		} catch (NullPointerException e ) {
-			return null;
+			throw new IllegalArgumentException ("pointFromCoords received: " + latArg + "-" + "lngArg");
 		}
+	}
+	
+	/** convert km to radius, radius is 111.12 km */
+	private double distanceFromKm ( int km ) {
+		return km/111.12;
 	}
 	
 	/**
@@ -137,7 +179,7 @@ public class LocationService {
 	 * @param lngArg
 	 * @return
 	 */
-	private Query buildQuery ( String username, String type ) {
+	private Query buildQuery ( String username, List<String> type ) throws IllegalArgumentException {
 		
 		Query query = new Query();
 
@@ -145,39 +187,34 @@ public class LocationService {
 		if ( username != null ) {
 			query.addCriteria(Criteria.where("username").is(username));
 		}
-		
 				
 		// Check for type		
 		try {
-			Location.PingType pingType = Location.PingType.valueOf(type);
-			query.addCriteria(Criteria.where("pingType").is(pingType));
+			
+			List<Location.PingType>pingTypeList = new ArrayList<>();
+			type.forEach( e -> {
+				pingTypeList.add(Location.PingType.valueOf(e));
+			});
+			
+			query.addCriteria(Criteria.where("pingType").in(pingTypeList));
+			
 		} catch (IllegalArgumentException e ) {
-			// expected if not passed
+			throw new IllegalArgumentException ("buildQuery received: " + username + "-" + type.toString());
 		} catch (NullPointerException e ) {
-			// expected if not passed
+			throw new IllegalArgumentException ("buildQuery received: " + username + "-" + type.toString());
 		}
 		
 		return query;
 	}
 	
-	/**
-	 * Deletes a location from the database. Only the username is required and will delete
-	 * all records with that username. Each additional parameter supplied will do a more
-	 * specific delete.
-	 * 
-	 * @param username
-	 * @param type
-	 * @param lat
-	 * @param lng
-	 * @return #number of deleted records
-	 */
-	public long deleteLocation ( String username, String type ) {
-								
-		DeleteResult count = mongoTemplate.remove(buildQuery(username, type ));
-		
-		return count.getDeletedCount();
-		
+	/** Overloaded for single type */
+	private Query buildQuery ( String username, String type ) throws IllegalArgumentException {
+		List<String> typeList = new ArrayList<>();
+		typeList.add(type);
+		return buildQuery ( username, typeList);
 	}
+	
+
 	
 	
 	/**
@@ -189,8 +226,33 @@ public class LocationService {
 	 * @param lngArg
 	 * @return
 	 */
-	public long countLocation ( String username, String type, String latArg, String lngArg ) {
-		return 1;
+	public long countLocationWithUsername ( String username, String type, String latArg, String lngArg ) 
+			throws IllegalArgumentException {
+		
+		Query query = buildQuery(username,type);
+		query.addCriteria(Criteria.where("loc").near(pointFromCoords(latArg,lngArg)));
+		
+		return mongoTemplate.count(query, Location.class);
+	}
+	
+	public long countLocation ( String latArg, String lngArg, int km, List<String> type ) 
+			throws IllegalArgumentException {
+		
+		
+		Query query = buildQuery ( null, type );
+		
+		query.addCriteria(
+				Criteria.where("loc")
+				.near( pointFromCoords(latArg, lngArg) )
+				.maxDistance( distanceFromKm(km) )
+				);
+		return mongoTemplate.count(query, Location.class);
+		
+		/* test code
+		Query query = new Query();
+		query.addCriteria(Criteria.where("loc").near(new Point(1.0,1.0)));
+		return mongoTemplate.count(query, Location.class);*/
+		
 	}
 	
 	public Page<Location> getLocationWithUsername ( String username, String type, String latArg, String lngArg, int page) 
