@@ -2,6 +2,7 @@ package com.idontchop.dateLocation.controllers;
 
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.idontchop.dateLocation.dto.LocationPage;
 import com.idontchop.dateLocation.dto.SuccessMessage;
 import com.idontchop.dateLocation.entities.Location;
 import com.idontchop.dateLocation.service.LocationService;
@@ -148,6 +150,18 @@ public class MainController {
 			@RequestParam ( name = "page", required=false, defaultValue="0") int page) {
 		
 		return locationService.getLocationWithUsername(username, type, lat, lng, page);
+	}
+	
+	@GetMapping ( value = {"/api/search-location/{types}/{lat}/{lng}/{km}"} )
+	public LocationPage getLocationsNear (@PathVariable ( name = "lat", required=false)  String lat, 
+			@PathVariable ( name = "lng", required=false)  String lng, 
+			@PathVariable  ( name = "types", required=false) List<String> types,
+			@PathVariable ( name = "km", required=true) int km,
+			@RequestParam ( name = "page", required=false, defaultValue="0") int page
+			) {
+		
+		return locationService.getLocationsNear(lat, lng, km, types, page);
+	
 	}
 
 

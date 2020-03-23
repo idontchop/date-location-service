@@ -16,6 +16,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 
+import com.idontchop.dateLocation.dto.LocationPage;
 import com.idontchop.dateLocation.entities.Location;
 import com.idontchop.dateLocation.repositories.LocationRepository;
 import com.idontchop.dateLocation.service.LocationService;
@@ -137,6 +138,14 @@ class DateLocationApplicationTests {
 		type.add("LOC");
 		long c = locationService.countLocation("36.158", "115.131", 1, type);
 		assertTrue ( c == 0 );
+	}
+	
+	@Test
+	void testLocationNear () {
+		LocationPage page = locationService.getLocationsNear("36", "115", 10, List.of("LOC"), 1);
+		assertTrue ( page != null );
+		assertTrue ( page.getResults().getContent().size() > 0);
+		
 	}
 
 }
