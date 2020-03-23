@@ -356,9 +356,14 @@ public class LocationService {
 		
 		NearQuery nearQuery = buildNearQuery(latArg, lngArg, km).skip(page * PAGESIZE).limit(PAGESIZE);
 		nearQuery.query(buildQuery(null,types));
-				
+		
+		// Total results needed for page count
+		long total = countLocation(latArg, lngArg, km, types);
+		
 		GeoResults<Location> results = mongoTemplate.geoNear(nearQuery, Location.class);
 		
+		// Build LocationPage for transfer
+		return LocationPage.build().setResults(results).setPageInfo(total, page, PAGESIZE);
 		
 	}
 }
