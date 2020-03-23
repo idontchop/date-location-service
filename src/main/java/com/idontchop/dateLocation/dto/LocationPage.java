@@ -16,11 +16,15 @@ import com.idontchop.dateLocation.entities.Location;
  * @author nathan
  *
  */
-public class UsersPage {
+public class LocationPage {
 
-	List<Location> users;
+	private List<Location> users;
 	
-	PageRequest pageRequest;
+	private long numElements;
+	
+	private long page;
+	
+	private long numPages;
 
 	public List<Location> getUsers() {
 		return users;
@@ -29,14 +33,5 @@ public class UsersPage {
 	public void setUsers(List<Location> users) {
 		this.users = users;
 	}
-
-	public PageRequest getPageRequest() {
-		return pageRequest;
-	}
-
-	public void setPageRequest(PageRequest pageRequest) {
-		this.pageRequest = pageRequest;
-	}
-	
 	
 }

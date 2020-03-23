@@ -29,7 +29,7 @@ import com.mongodb.client.model.geojson.Position;
  * 
  *  Location manipulation:
  *  
- *  /location/{username}/{type}/{lat}/{lng}
+ *  /api/location/{username}/{type}/{lat}/{lng}
  *  
  *  POST/PUT - All arguments required
  *  DELETE - username - required, type - optional, lat/lng - optional
@@ -37,7 +37,7 @@ import com.mongodb.client.model.geojson.Position;
  *  
  *  Searches:
  *  
- *  
+ *  /api/search-location/{type}/{lat}/{lng}/{km}  
  *  
  *  type:
  *  	HOME: - only one in database, POST/PUT always replaces

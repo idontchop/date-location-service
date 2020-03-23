@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -16,7 +17,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import com.idontchop.dateLocation.dto.UsersPage;
+import com.idontchop.dateLocation.dto.LocationPage;
 import com.idontchop.dateLocation.entities.Location;
 import com.idontchop.dateLocation.repositories.LocationRepository;
 
@@ -24,6 +25,9 @@ import com.mongodb.client.result.DeleteResult;
 
 @Service
 public class LocationService {
+	
+	private final long PAGESIZE 	=	500;	// Size of each page, this should be fairly large,
+												//too large for person, good for api that will be reduced
 	
 	@Autowired
 	MongoTemplate mongoTemplate;
@@ -133,9 +137,9 @@ public class LocationService {
 	
 	private NearQuery buildNearQuery ( Point point, int km ) {
 		
-		Distance distance = new Distance(km, Metrics.KILOMETERS);
-		NearQuery nearQuery = NearQuery.near(point).maxDistance(distance);		
+		NearQuery nearQuery = NearQuery.near(point).maxDistance(distanceFromKm(km));	
 		return nearQuery;
+		
 	}
 	
 	/**
@@ -347,55 +351,14 @@ public class LocationService {
 		
 	}
 	
-	/**
-	 * Main search.
-	 * 
-	 * Most users will make a search at a specific geolocation. types, page is optional
-	 * 
-	 * @param latArg
-	 * @param lngArg
-	 * @param km
-	 * @param type
-	 * @param page
-	 * @return
-	 */
-	public Page<Location> getLocationNear ( String latArg, String lngArg, int km, String[] types, int page ) {
-		
-		/*
-		 * This will have to be a mongoTemplate.
-		 * https://stackoverflow.com/questions/29030542/pagination-with-mongotemplate
-		 * 
-		 * query.with() can be set with Pageable, then pageable managed manually
-		 * 
-		 * 
-		 */
-		double lat,lng;
-		Point point;
-		try {
-			lat = Double.parseDouble(latArg);
-			lng = Double.parseDouble(lngArg);
-			
-			point = new Point ( lng, lat );
-			
-		} catch ( NumberFormatException e ) {
-			throw new IllegalArgumentException ("locationService.getLocationNear requires two args");
-		} catch (NullPointerException e ) {
-			throw new IllegalArgumentException ("locationService.getLocationNear requires two args");
-		}
-		
-		Distance distance = new Distance ( km, Metrics.KILOMETERS);
-		
-		if ( types != null && types.length > 0) {
-			
-		}
-		
-		
-		
-		return null;
-		
-	}
 	
-	public UsersPage getUsersNear ( String latArg, String lngArg, int km, String [] types, int page) {
-		return null;
+	public LocationPage getLocationsNear ( String latArg, String lngArg, int km, List<String> types, int page) {
+		
+		NearQuery nearQuery = buildNearQuery(latArg, lngArg, km).skip(page * PAGESIZE).limit(PAGESIZE);
+		nearQuery.query(buildQuery(null,types));
+				
+		GeoResults<Location> results = mongoTemplate.geoNear(nearQuery, Location.class);
+		
+		
 	}
 }
