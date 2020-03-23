@@ -354,10 +354,12 @@ public class LocationService {
 	
 	public LocationPage getLocationsNear ( String latArg, String lngArg, int km, List<String> types, int page) {
 		
+		// setup NearQuery
 		NearQuery nearQuery = buildNearQuery(latArg, lngArg, km).skip(page * PAGESIZE).limit(PAGESIZE);
 		nearQuery.inKilometers();
-		nearQuery.query(buildQuery(null,types));
+		nearQuery.query(buildQuery(null,types)); // add regular query with username / types criteria
 				
+		// Do Near Query
 		GeoResults<Location> results = mongoTemplate.geoNear(nearQuery, Location.class);
 		
 		// Total results needed for page count
