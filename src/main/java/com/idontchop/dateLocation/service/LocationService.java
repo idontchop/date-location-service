@@ -169,7 +169,7 @@ public class LocationService {
 	
 	/** convert km to radius, radius is 111.12 km */
 	private double distanceFromKm ( int km ) {
-		return km/111.12;
+		return ((double) km)/111.12;
 	}
 	
 	/**
@@ -355,7 +355,7 @@ public class LocationService {
 	public LocationPage getLocationsNear ( String latArg, String lngArg, int km, List<String> types, int page) {
 		
 		NearQuery nearQuery = buildNearQuery(latArg, lngArg, km).skip(page * PAGESIZE).limit(PAGESIZE);
-		nearQuery.inKilometers();
+		// nearQuery.inKilometers(); ? don't need since we convert to radius
 		nearQuery.query(buildQuery(null,types));
 				
 		GeoResults<Location> results = mongoTemplate.geoNear(nearQuery, Location.class);
