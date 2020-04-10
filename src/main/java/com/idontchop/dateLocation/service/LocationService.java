@@ -356,13 +356,12 @@ public class LocationService {
 		
 		// setup NearQuery
 		NearQuery nearQuery = buildNearQuery(latArg, lngArg, km).skip(page * PAGESIZE).limit(PAGESIZE);
-<<<<<<< HEAD
+
 		// nearQuery.inKilometers(); ? don't need since we convert to radius
 		nearQuery.query(buildQuery(null,types));
-=======
+
 		nearQuery.inKilometers();
 		nearQuery.query(buildQuery(null,types)); // add regular query with username / types criteria
->>>>>>> branch 'master' of https://github.com/idontchop/date-location-service.git
 				
 		// Do Near Query
 		GeoResults<Location> results = mongoTemplate.geoNear(nearQuery, Location.class);
