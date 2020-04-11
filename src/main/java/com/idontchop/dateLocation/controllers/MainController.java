@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.idontchop.dateLocation.dto.LocationPage;
+import com.idontchop.dateLocation.dto.RestMessage;
 import com.idontchop.dateLocation.dto.SuccessMessage;
 import com.idontchop.dateLocation.entities.Location;
 import com.idontchop.dateLocation.service.LocationService;
@@ -66,7 +67,7 @@ public class MainController {
 	private String appName;
 	
 	@RequestMapping ("/helloWorld")
-	public String helloWorld () {
+	public RestMessage helloWorld () {
 		String serverAddress,serverHost;
 		try {
 			serverAddress = NetworkInterface.getNetworkInterfaces().nextElement()
@@ -80,12 +81,13 @@ public class MainController {
 		} catch (SocketException e) {
 			serverHost = e.getMessage();
 		}
-
-		return "{\n\"message\": \"Hello from " + appName + "\",\n"
-				+ "\"host\": \"" + serverHost + "\",\n"
-				+ "\"address\": \"" + serverAddress + "\",\n"
-				+ "\"port\": \"" + serverPort + "\",\n"
-				+ "\n}";
+		
+		return RestMessage.build("Hello From Location service")
+				.add("host", serverHost)
+				.add("address", serverAddress)
+				.add("port", serverPort)
+				.add("name", appName);
+		
 	}
 	
 	@RequestMapping ("/getPageRequest")
