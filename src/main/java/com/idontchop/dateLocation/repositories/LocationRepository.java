@@ -28,4 +28,7 @@ public interface LocationRepository extends MongoRepository<Location, String> {
 	Page<Location> findByLocInAndPingTypeIn ( List<Location> points, List<Location.PingType> pingTypes, Pageable p);
 	
 	Page<Location> findByLocNear (Point point, Distance distance, Pageable p);
+	
+	// for Profile
+	List<Location> findByUsernameInAndPingTypeIn ( List<String> usernames, List<Location.PingType> pingType);
 }
